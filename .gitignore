@@ -1,0 +1,6 @@
+# Ignore the compiled executable binary
+idle_dimmer
+
+# Ignore internal local environment settings
+.vscode/
+config.txt
