@@ -83,3 +83,7 @@ Settings are hot-reloaded automatically every time you return to your desk and w
   ```bash
   pkill idle_dimmer
   ```
+
+## License
+
+Distributed under the GNU General Public License v3.0 or later. See `LICENSE` for more information.
