@@ -1,17 +1,19 @@
 # Idle Dimmer Daemon
 
-A custom, lightweight desktop utility for Linux Mint (Cinnamon/X11) that provides smart, hardware-independent screen dimming and power saving. 
+A custom, lightweight desktop utility for Linux Mint (Cinnamon/X11) that provides smart, hardware-independent screen dimming and KVM-friendly power management. This tool is designed specifically for setups where kernel-level backlight controllers or standard utilities (like `brightnessctl`) fail, or where physical KVM switches break display connections when monitors are powered off. 
 
-This tool is designed specifically for desktop PCs where kernel-level backlight controllers or standard utilities (like `brightnessctl`) fail. It uses an input-transparent software overlay via X11 XRender for gradual dimming, and invokes DPMS directly to safely enter standby mode without enforcing an automated lock screen.
+It uses an input-transparent software overlay via X11 XRender for gradual dimming, and offers a choice between an overlay-driven software blackout (preserving KVM handshakes) or direct DPMS hardware standby.
 
 ## Key Features
 
 - **Hardware-Independent Software Dimming:** Fades your monitor down smoothly using an X11 ARGB alpha transparency channel overlay.
 - **Input-Transparent Overlay:** Uses the XShape extension to ensure the dark overlay is completely click-through. Keyboard inputs, clicks, and scrolls pass directly to your active apps underneath.
-- **DPMS Power Management:** Forces your display into complete hardware standby (`xset dpms force standby`) without interacting with Cinnamon's lock modules or password screens.
+- **KVM & Hardware-Friendly Modes:** 
+  - *Software Blackout:* Paints a 100% black software layer while keeping the video signal active. This stops KVM switches and TV displays from dropping their hardware connection (EDID handshake) when you switch computers.
+  - *DPMS Power Management:* Directly forces your display into complete hardware standby (`xset dpms force standby`) if you are not using a KVM and want to save physical power.
 - **Asymmetric Snap Back:** Fades out smoothly over 1.5 seconds when entering an idle warning state, but snaps back to full transparency in **0 milliseconds** the instant user activity is detected.
 - **Media & Call Detection:** Continuously checks system audio streams via `PulseAudio`/`PipeWire` to automatically pause the dimming cycle if movies, music, or video calls are active.
-- **Dynamic Hot-Reloading:** Reads configurations from your global home profile folder and automatically refreshes your settings every time you wake the monitor back up.
+- **Dynamic Hot-Reloading:** Reads structured TOML configurations from your global home profile folder and automatically refreshes your settings every time you wake the monitor back up.
 
 ## Installation & Setup
 
@@ -39,39 +41,54 @@ mkdir -p ~/.config/idle_dimmer
 
 # Copy executable and baseline configuration
 cp idle_dimmer ~/.local/bin/idle_dimmer
-cp config.txt ~/.config/idle_dimmer/config.txt
+cp config.toml ~/.config/idle_dimmer/config.toml
 ```
 
 ### 4. Enable Startup Autostart
-To ensure the application launches silently in the background whenever you sign into your Cinnamon desktop session, create an autostart desktop profile shortcut:
+To ensure the application launches silently in the background whenever you sign into your Cinnamon desktop session, run this command to create a desktop autostart profile shortcut:
 ```bash
-cat << 'EOF' > ~/.config/autostart/idle_dimmer.desktop
+cat << EOF > ~/.config/autostart/idle_dimmer.desktop
 [Desktop Entry]
 Type=Application
 Name=Idle Dimmer Daemon
 Comment=Custom Input-Transparent Hardware Idle Software Dimming Layer
-Exec=/home/joe/.local/bin/idle_dimmer
+Exec=\$HOME/.local/bin/idle_dimmer
 Icon=display
 Terminal=false
 Categories=Utility;
 X-GNOME-Autostart-enabled=true
 EOF
 ```
-*(Note: If your system profile name is not `joe`, replace the username in the `Exec=` line above with your actual user path).*
+
+---
 
 ## Configuration
 
-You can change all timing metrics or maximum overlay darkness constraints by modifying your system configuration file at **`~/.config/idle_dimmer/config.txt`**:
+You can customize your timing metrics, maximum overlay darkness constraints, and KVM behavior by modifying your system configuration file at **`~/.config/idle_dimmer/config.toml`**. 
 
-```text
-# Configuration for Idle Dimmer (Times in seconds)
-IDLE_WARNING_SEC=10
-IDLE_BLACKOUT_SEC=20
+```toml
+# Configuration for the screen dimmer tool
 
-# Max software dimming opacity value between 0.0 (clear) and 1.0 (blackout)
-MAX_DIM_OPACITY=0.65
+[timers]
+# Inactivity time before the screen starts dimming (in seconds)
+idle_warning_sec = 10
+
+# Total inactivity time before full screen blackout (in seconds)
+idle_blackout_sec = 20
+
+[display]
+# Maximum dimness level during warning phase (0.0 = clear, 1.0 = pitch black)
+max_dim_opacity = 0.65
+
+# 0 = Safe Software Blackout (KVM-friendly, leaves screen on but 100% black)
+# 1 = Hardware Power Down (Puts monitor panel to sleep via DPMS)
+use_dpms = 0
 ```
 Settings are hot-reloaded automatically every time you return to your desk and wake the machine!
+
+> **💡 Linux Mint Cinnamon KVM Tip:** If you are using a KVM switch (`use_dpms = 0`), you should also open Mint's **System Settings -> Power Management**, and set **"Turn off the screen when inactive for"** to **Never**. This completely stops Cinnamon from overriding your daemon and turning off the video link.
+
+---
 
 ## Process Management
 
@@ -79,6 +96,7 @@ Settings are hot-reloaded automatically every time you return to your desk and w
   ```bash
   ~/.local/bin/idle_dimmer > /dev/null 2>&1 &
   ```
+
 - **Terminate Active Background Daemon:**
   ```bash
   pkill idle_dimmer

@@ -1,0 +1,16 @@
+# Configuration for Idle Dimmer (Times in seconds)
+
+[timers]
+# Number of seconds of inactivity before the screen starts dimming
+IDLE_WARNING_SEC=180
+
+# Total seconds of inactivity before entering full blackout mode
+IDLE_BLACKOUT_SEC=240
+
+[display]
+# Max software dimming opacity value between 0.0 (perfectly clear) and 1.0 (pure blackout)
+MAX_DIM_OPACITY=0.65
+
+# 0 = Safe Software Blackout (KVM-friendly, screen stays on but turns 100% black)
+# 1 = Hardware Power Down (Uses DPMS to put the monitor to sleep to save power)
+USE_DPMS=0
