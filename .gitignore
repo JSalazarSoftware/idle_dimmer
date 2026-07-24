@@ -5,7 +5,5 @@ idle_dimmer
 .vscode/
 config.txt
 
-# Ignore repomix generated files
-repomix.config.json
+# Ignore repomix generated file
 repomix-output.xml
-.repomixignore
