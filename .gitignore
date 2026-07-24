@@ -4,3 +4,8 @@ idle_dimmer
 # Ignore internal local environment settings
 .vscode/
 config.txt
+
+# Ignore repomix generated files
+repomix.config.json
+repomix-output.xml
+.repomixignore
